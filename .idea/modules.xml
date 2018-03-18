@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/InventoryApp.iml" filepath="$PROJECT_DIR$/InventoryApp.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://C:\Users\Garron\AndroidStudioProjects\InventoryApp\app\app.iml" filepath="C:\Users\Garron\AndroidStudioProjects\InventoryApp\app\app.iml" />
     </modules>
   </component>
 </project>

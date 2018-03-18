@@ -40,7 +40,9 @@
     <string name="editor_update_success">Item Updated</string>
     <string name="editor_delete_successful">Item Deleted</string>
     <string name="editor_delete_failed">Error with deleting item</string>
-    <string name="insert_vendor_invalid">Error with the item vendor\'s email.</string>
+    <string name="insert_vendor_invalid">Please enter the vendor\'s email.</string>
+    <string name="item_intent_failed">Please enter the product\'s name.</string>
+    <string name="vendor_intent_failed">Please save an email first.</string>
 
     <!-- Editor Activity Prompts -->
     <string name="delete_dialog_warning">Delete this item?</string>

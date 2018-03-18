@@ -12,10 +12,12 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -43,6 +45,10 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
      * EditText field to enter the item vendor's contact information
      */
     private EditText mVendorEditText;
+    /**
+     * Contact vendor button.
+     */
+    private Button mContactVendorButton;
 
     private int EDIT_LOADER = 1;
 
@@ -76,6 +82,15 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         mQuantityEditText.setOnTouchListener(mTouchListener);
         mVendorEditText.setOnTouchListener(mTouchListener);
 
+        // Set the onClickListener to the mContactVendorButton;
+        mContactVendorButton = (Button) findViewById(R.id.contactVendorButton);
+        mContactVendorButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                contactVendor();
+            }
+        });
+
         getSupportLoaderManager().initLoader(EDIT_LOADER, null, this);
     }
 
@@ -106,8 +121,8 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             return;
         }
         //save the entered data
-            saveItem();
-        }
+        saveItem();
+    }
 
     private void saveItem() {
         // Read input fields,, trim() removes excess white space
@@ -272,7 +287,8 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 MerchandiseEntry._ID,
                 MerchandiseEntry.COLUMN_MERCHANDISE_NAME,
                 MerchandiseEntry.COLUMN_MERCHANDISE_PRICE,
-                MerchandiseEntry.COLUMN_MERCHANDISE_QUANTITY
+                MerchandiseEntry.COLUMN_MERCHANDISE_QUANTITY,
+                MerchandiseEntry.COLUMN_MERCHANDISE_VENDOR
         };
         return new CursorLoader(
                 this,
@@ -283,12 +299,18 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 null);
     }
 
+    /**
+     * VendorContact String, ItemName String, will both used in
+     * a later method.
+     */
+    String vendorContact = null;
+    String itemName = null;
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         if (cursor.moveToFirst()) {
             // Get item name and set it to the name edit text
             int nameColumnIndex = cursor.getColumnIndex(MerchandiseEntry.COLUMN_MERCHANDISE_NAME);
-            String itemName = cursor.getString(nameColumnIndex);
+            itemName = cursor.getString(nameColumnIndex);
             mNameEditText.setText(itemName);
 
             // Get item price and set it to the price edit text
@@ -300,6 +322,41 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             int quantityColumnIndex = cursor.getColumnIndex(MerchandiseEntry.COLUMN_MERCHANDISE_QUANTITY);
             String itemQuantity = String.valueOf(cursor.getInt(quantityColumnIndex));
             mQuantityEditText.setText(itemQuantity);
+
+            // Get item vendor's contact and set it to the vendor's contact
+            // EditText
+            int vendorColumnIndex = cursor.getColumnIndex(MerchandiseEntry.COLUMN_MERCHANDISE_VENDOR);
+            vendorContact = cursor.getString(vendorColumnIndex);
+            mVendorEditText.setText(vendorContact);
+        }
+    }
+
+    String contact = null;
+    String item = null;
+    public void contactVendor() {
+        // get the contact information for the EditText or ask the use to
+        // enter that info if it's not already present.
+        if (vendorContact != null) {
+            contact = vendorContact;
+        } else {
+            Toast.makeText(this,R.string.vendor_intent_failed,Toast.LENGTH_LONG).show();
+            return;
+        }
+        // get the product name from the EditText, or ask the user to
+        // enter that info if it's not already present.
+        if (itemName != null) {
+            item = itemName;
+        } else {
+            Toast.makeText(this, R.string.item_intent_failed,Toast.LENGTH_LONG).show();
+        }
+        String[] contacts ={contact};
+        Intent intent = new Intent(Intent.ACTION_SENDTO);
+        intent.setData(Uri.parse("mailto:"));
+        intent.putExtra(Intent.EXTRA_EMAIL, contacts);
+        intent.putExtra(Intent.EXTRA_SUBJECT, item);
+        Log.e("this", ":item:"+ item +":itemName:"+itemName+":contact:" + contact+":vendorContact:"+vendorContact);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
         }
     }
 
