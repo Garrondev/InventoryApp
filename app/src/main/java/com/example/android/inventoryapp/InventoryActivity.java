@@ -2,7 +2,7 @@
 package com.example.android.inventoryapp;
 
 import android.content.ContentUris;
-import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -11,8 +11,8 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -28,9 +28,6 @@ public class InventoryActivity extends AppCompatActivity implements LoaderManage
 
     // Identifies the particular loader being used
     private static final int INVENTORY_LOADER = 0;
-
-    public static Uri QUANTITY_DECREASE_URI;
-    public static ContentValues QUANTITY_DECREASE_VALUES;
 
     // The adapter being used to display the list's data.
     MerchandiseCursorAdapter mCursorAdapter;
@@ -71,7 +68,6 @@ public class InventoryActivity extends AppCompatActivity implements LoaderManage
                 Intent intent = new Intent(InventoryActivity.this, EditorActivity.class);
                 // Create the Uri for the clicked item
                 Uri currentPetUri = ContentUris.withAppendedId(MerchandiseEntry.CONTENT_URI, id);
-                Log.e("Activity", "uri is "+currentPetUri);
                 intent.setData(currentPetUri);
                 startActivity(intent);
             }
@@ -91,8 +87,35 @@ public class InventoryActivity extends AppCompatActivity implements LoaderManage
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // User clicked on a menu option in the app bar overflow menu
-        deleteInventory();
+        showDeletedConfirmationDialog();
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showDeletedConfirmationDialog() {
+        // Create an AlertDialog.Builder and set the message, and click listeners
+        // for the positive and negative buttons on the dialog.
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.delete_all);
+        builder.setPositiveButton(R.string.delete_all_warning, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                // User clicked the "Delete all" button.
+                deleteInventory();
+            }
+        });
+        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                // User clicked "Cancel" button, so dismiss the dialog
+                // return to editing.
+                if (dialogInterface != null) {
+                    dialogInterface.dismiss();
+                }
+            }
+        });
+        // Create and show the AlertDialog
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
     }
 
     /**
@@ -110,7 +133,9 @@ public class InventoryActivity extends AppCompatActivity implements LoaderManage
                 MerchandiseEntry._ID,
                 MerchandiseEntry.COLUMN_MERCHANDISE_NAME,
                 MerchandiseEntry.COLUMN_MERCHANDISE_PRICE,
-                MerchandiseEntry.COLUMN_MERCHANDISE_QUANTITY};
+                MerchandiseEntry.COLUMN_MERCHANDISE_QUANTITY,
+                MerchandiseEntry.COLUMN_MERCHANDISE_VENDOR,
+                MerchandiseEntry.COLUMN_MERCHANDISE_IMAGE};
         return new CursorLoader(
                 this,                   // Parent activity context
                 MerchandiseEntry.CONTENT_URI,   // Provider content URI to query

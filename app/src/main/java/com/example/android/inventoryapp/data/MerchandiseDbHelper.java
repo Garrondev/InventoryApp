@@ -15,7 +15,7 @@ public class MerchandiseDbHelper extends SQLiteOpenHelper {
     /**
      * Name of the database file
      */
-    private static final String DATABSE_NAME = "inventory.db";
+    private static final String DATABASE_NAME = "inventory.db";
 
     /**
      * If you change the database schema, you must increment the database version.
@@ -27,12 +27,13 @@ public class MerchandiseDbHelper extends SQLiteOpenHelper {
             + MerchandiseEntry.COLUMN_MERCHANDISE_NAME + " TEXT NOT NULL, "
             + MerchandiseEntry.COLUMN_MERCHANDISE_PRICE + " NUMERIC DEFAULT 0, "
             + MerchandiseEntry.COLUMN_MERCHANDISE_QUANTITY + " INTEGER NOT NULL DEFAULT 0, "
-            + MerchandiseEntry.COLUMN_MERCHANDISE_VENDOR + " TEXT NOT NULL);";
+            + MerchandiseEntry.COLUMN_MERCHANDISE_VENDOR + " TEXT NOT NULL, "
+            + MerchandiseEntry.COLUMN_MERCHANDISE_IMAGE + " BLOB NOT NULL);";
 
     private static final String SQL_DELETE_ENTRIES = "DROP TABLE IF EXISTS " + MerchandiseEntry.TABLE_NAME;
 
     public MerchandiseDbHelper(Context context) {
-        super(context, DATABSE_NAME, null, DATABASE_VERSION);
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
     @Override

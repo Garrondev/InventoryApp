@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -13,10 +12,22 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!-- Label -->
-        <TextView
-            style="@style/CategoryStyle"
-            android:text="@string/category_overview" />
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <!-- Label -->
+            <TextView
+                style="@style/CategoryStyle"
+                android:text="@string/category_overview" />
+
+            <ImageView
+                android:id="@+id/item_image_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:src="@drawable/ic_add_circle_black_48dp"/>
+        </LinearLayout>
 
         <!-- Input fields -->
         <LinearLayout
@@ -42,29 +53,52 @@
                 android:inputType="number|numberDecimal" />
 
             <!-- Quantity field -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
             <EditText
                 android:id="@+id/edit_item_quantity"
-                style="@style/EditorFieldStyle"
+                style="@style/EditorQuantityFieldStyle"
                 android:hint="@string/hint_item_quantity"
                 android:inputType="number" />
+                <ImageButton
+                    android:id="@+id/quantity_decrease_button"
+                    style="@style/button_style"
+                    android:src="@drawable/ic_remove_circle_black_48dp"
+                    android:visibility="gone"/>
+                <ImageButton
+                    android:id="@+id/quantity_increase_button"
+                    style="@style/button_style"
+                    android:src="@drawable/ic_add_circle_black_48dp"
+                    android:visibility="gone"/>
+            </LinearLayout>
 
             <!-- Vendor Contact field -->
             <EditText
                 android:id="@+id/edit_item_vendor"
                 style="@style/EditorFieldStyle"
                 android:hint="@string/hint_item_vendor"
-                android:inputType="textWebEmailAddress"/>
+                android:inputType="textWebEmailAddress" />
         </LinearLayout>
 
     </LinearLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
         <Button
-            android:id="@+id/contactVendorButton"
+            android:id="@+id/contact_vendor_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/contact_vendor"/>
+            android:text="@string/contact_vendor" />
+
+        <Button
+            android:id="@+id/upload_image_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/upload_image" />
     </LinearLayout>
 
 </LinearLayout>

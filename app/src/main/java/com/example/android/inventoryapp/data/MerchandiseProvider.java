@@ -31,11 +31,6 @@ public class MerchandiseProvider extends ContentProvider {
     private MerchandiseDbHelper mDbHelper;
 
     /**
-     * Tag for the log messages
-     */
-    public static final String LOG_TAG = MerchandiseProvider.class.getSimpleName();
-
-    /**
      * Initialize the provider and the database helper object.
      */
     @Override
@@ -109,9 +104,23 @@ public class MerchandiseProvider extends ContentProvider {
         }
 
         // Check that the quantity is not 0
-        Integer quentity = values.getAsInteger(MerchandiseEntry.COLUMN_MERCHANDISE_QUANTITY);
-        if (quentity < 0) {
-            Toast.makeText(getContext(), R.string.insert_quanity_negative, Toast.LENGTH_LONG).show();
+        Integer quantity = values.getAsInteger(MerchandiseEntry.COLUMN_MERCHANDISE_QUANTITY);
+        if (quantity < 0) {
+            Toast.makeText(getContext(), R.string.insert_quantity_negative, Toast.LENGTH_LONG).show();
+            return null;
+        }
+
+        // Check that the vendor contact information is present
+        String vendorContact = values.getAsString(MerchandiseEntry.COLUMN_MERCHANDISE_VENDOR);
+        if (vendorContact == null) {
+            Toast.makeText(getContext(),R.string.vendor_entry_invalid, Toast.LENGTH_LONG).show();
+            return null;
+        }
+
+        // Check that the item has an image
+        byte[] image = values.getAsByteArray(MerchandiseEntry.COLUMN_MERCHANDISE_IMAGE);
+        if (image == null) {
+            Toast.makeText(getContext(), R.string.insert_image_invalid, Toast.LENGTH_LONG).show();
             return null;
         }
 
@@ -127,7 +136,7 @@ public class MerchandiseProvider extends ContentProvider {
             return null;
         }
 
-        // Notifiy all listeners that the data has changed for the pet content URI
+        // Notify all listeners that the data has changed for the pet content URI
         getContext().getContentResolver().notifyChange(uri, null);
 
         return ContentUris.withAppendedId(uri, id);
@@ -185,6 +194,20 @@ public class MerchandiseProvider extends ContentProvider {
                 return 0;
             }
         }
+        if (contentValues.containsKey(MerchandiseEntry.COLUMN_MERCHANDISE_VENDOR)) {
+            String vendorContact = contentValues.getAsString(MerchandiseEntry.COLUMN_MERCHANDISE_VENDOR);
+            if(vendorContact == null) {
+                Toast.makeText(getContext(), R.string.vendor_entry_invalid, Toast.LENGTH_LONG).show();
+                return 0;
+            }
+        }
+        if (contentValues.containsKey(MerchandiseEntry.COLUMN_MERCHANDISE_IMAGE)) {
+            byte[] image = contentValues.getAsByteArray(MerchandiseEntry.COLUMN_MERCHANDISE_IMAGE);
+            if(image == null) {
+                Toast.makeText(getContext(), R.string.insert_image_invalid, Toast.LENGTH_LONG).show();
+                return 0;
+            }
+        }
         // store the number of database rows affected by the update statement
         int rowsUpdated = database.update(MerchandiseEntry.TABLE_NAME, contentValues, selection, selectionArgs);
         // if rows were updated, notify all listeners that the data has changed
@@ -239,7 +262,7 @@ public class MerchandiseProvider extends ContentProvider {
             case MERCHANDISE_ID:
                 return MerchandiseEntry.CONTENT_ITEM_TYPE;
             default:
-                Toast.makeText(getContext(), "Your instructions are invalid.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), R.string.mime_type_issue, Toast.LENGTH_SHORT).show();
                 return null;
         }
     }

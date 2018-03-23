@@ -10,7 +10,8 @@
     <string name="sale">Sale</string>
     <string name="decrease_button_description">Decreases the quantity of an item</string>
 
-    <string name="delete_all">"Delete All Items</string>
+    <string name="delete_all">Delete All Items</string>
+    <string name="delete_all_warning">Delete entire database?</string>
 
     <string name="quantity_entry_negative">Quantity can\'t be less than 0</string>
     <string name="price_entry_negative">Price can\'t be less than 0</string>
@@ -20,8 +21,8 @@
 
     <!-- Item attributes -->
     <string name="hint_item_name">Product Name</string>
-    <string name="hint_item_price">Price (0 if left empty)</string>
-    <string name="hint_item_quantity">Quantity (0 if left empty)</string>
+    <string name="hint_item_price">Price</string>
+    <string name="hint_item_quantity">Quantity</string>
     <string name="hint_item_vendor">Vendor\'s Email Address</string>
 
     <!-- Label for editor menu option to save an item and leave editor  -->
@@ -43,6 +44,7 @@
     <string name="insert_vendor_invalid">Please enter the vendor\'s email.</string>
     <string name="item_intent_failed">Please enter the product\'s name.</string>
     <string name="vendor_intent_failed">Please save an email first.</string>
+    <string name="insert_image_invalid">Please upload a picture.</string>
 
     <!-- Editor Activity Prompts -->
     <string name="delete_dialog_warning">Delete this item?</string>
@@ -57,15 +59,20 @@
 
     <!-- Editor Activity buttons-->
     <string name="contact_vendor">Email Vendor</string>
+    <string name="upload_image">Upload Image</string>
 
     <!-- MerchandiseProvider -->
     <string name="cursor_query_error">Cannot perform that instruction</string>
     <string name="insert_failed">Failed to add the item</string>
     <string name="insert_query_invalid">Cannot insert that item</string>
     <string name="insert_name_invalid">Item needs a name</string>
+    <string name="insert_quantity_invalid">Item needs a quantity</string>
+    <string name="insert_price_invalid">Item needs a price</string>
     <string name="insert_price_negative">Price cannot be negative</string>
-    <string name="insert_quanity_negative">Quantity cannot be negative</string>
+    <string name="insert_quantity_negative">Quantity cannot be negative</string>
     <string name="delete_failed">Error with delete instruction</string>
+    <string name="vendor_entry_invalid">Please enter the vendor\'s email</string>
+    <string name="mime_type_issue">Unable to apply instructions</string>
 
     <string name="test_toast">This is Your doing</string>
 </resources>

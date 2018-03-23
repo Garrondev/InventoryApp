@@ -1,27 +1,39 @@
 package com.example.android.inventoryapp;
 
+import android.Manifest;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.NavUtils;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.example.android.inventoryapp.data.MerchandiseContract.MerchandiseEntry;
+
+import static com.example.android.inventoryapp.data.DbBitmapUtility.getBytes;
+import static com.example.android.inventoryapp.data.DbBitmapUtility.getImage;
 
 /**
  * Created by gcdev on 3/11/2018.
@@ -49,12 +61,19 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
      * Contact vendor button.
      */
     private Button mContactVendorButton;
+    /**
+     * Item image.
+     */
+    private ImageView mItemImageView;
+    private Button mUploadImageButton;
 
     private int EDIT_LOADER = 1;
 
     private boolean mItemHasChanged = false;
 
     Uri mItemUri;
+
+    public static final int GET_FROM_GALLERY = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,16 +85,38 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
 
         if (mItemUri != null) {
             setTitle(R.string.editor_activity_title_edit);
+
+            // Show the quantity increase and decrease buttons
+            ImageButton increaseButton = findViewById(R.id.quantity_increase_button);
+            ImageButton decreaseButton = findViewById(R.id.quantity_decrease_button);
+            increaseButton.setVisibility(View.VISIBLE);
+            decreaseButton.setVisibility(View.VISIBLE);
+            // Set the onClickListeners on the buttons that update
+            // the quantity by +/-1.
+            increaseButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    increaseQuantity();
+                }
+            });
+            decreaseButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    decreaseQuantity();
+                }
+            });
+
             invalidateOptionsMenu();
         } else {
             setTitle(R.string.editor_activity_title_add);
         }
 
-        // Find all relevent views that we will need to read user input from
+        // Find all relevant views that we will need to read user input from
         mNameEditText = (EditText) findViewById(R.id.edit_item_name);
         mPriceEditText = (EditText) findViewById(R.id.edit_item_price);
         mQuantityEditText = (EditText) findViewById(R.id.edit_item_quantity);
         mVendorEditText = (EditText) findViewById(R.id.edit_item_vendor);
+        mItemImageView = (ImageView) findViewById(R.id.item_image_view);
 
         mNameEditText.setOnTouchListener(mTouchListener);
         mPriceEditText.setOnTouchListener(mTouchListener);
@@ -83,7 +124,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         mVendorEditText.setOnTouchListener(mTouchListener);
 
         // Set the onClickListener to the mContactVendorButton;
-        mContactVendorButton = (Button) findViewById(R.id.contactVendorButton);
+        mContactVendorButton = (Button) findViewById(R.id.contact_vendor_button);
         mContactVendorButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -92,6 +133,62 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         });
 
         getSupportLoaderManager().initLoader(EDIT_LOADER, null, this);
+
+        // Setup ImageView
+        // Source for idea: http://viralpatel.net/blogs/pick-image-from-galary-android-app/
+        mUploadImageButton = findViewById(R.id.upload_image_button);
+        mUploadImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(
+                        Intent.ACTION_PICK,
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+
+                startActivityForResult(intent, GET_FROM_GALLERY);
+            }
+        });
+
+        requestPermissions();
+    }
+
+    public void requestPermissions() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE) ||
+                    ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            } else {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        2);
+            }
+        }
+    }
+
+    // increase the quantity when the (+) button is tapped.
+    private void increaseQuantity() {
+        int quantityInt = Integer.parseInt(mQuantityEditText.getText().toString());
+        ContentValues increaseQuantityValue = new ContentValues();
+        increaseQuantityValue.put(MerchandiseEntry.COLUMN_MERCHANDISE_QUANTITY, (quantityInt + 1));
+        getContentResolver().update(mItemUri, increaseQuantityValue, null, null);
+    }
+
+    // decrease the quantity when the (-) button is tapped.
+    private void decreaseQuantity() {
+        int quantityInt = Integer.parseInt(mQuantityEditText.getText().toString());
+        if (quantityInt < 1) {
+            Toast.makeText(this, R.string.quantity_entry_negative, Toast.LENGTH_SHORT).show();
+            return;
+        } else {
+            ContentValues decreaseQuantityValue = new ContentValues();
+            decreaseQuantityValue.put(MerchandiseEntry.COLUMN_MERCHANDISE_QUANTITY, (quantityInt - 1));
+            getContentResolver().update(mItemUri, decreaseQuantityValue, null, null);
+        }
+    }
+
+    // Test method
+    private void test() {
+        Toast.makeText(this, "This works", Toast.LENGTH_SHORT).show();
     }
 
     /**
@@ -107,17 +204,24 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         // check that there is a Price: if not, set the price to zero.
         boolean noPrice = mPriceEditText.getText().toString().equals("");
         if (noPrice) {
-            mPriceEditText.setText("0");
+            Toast.makeText(this, R.string.insert_price_invalid, Toast.LENGTH_LONG).show();
+            return;
         }
         // check that there is a set quantity: if not, set the quantity to 0.
         boolean noQuantity = mQuantityEditText.getText().toString().equals("");
         if (noQuantity) {
-            mQuantityEditText.setText("0");
+            Toast.makeText(this, R.string.insert_quantity_invalid, Toast.LENGTH_LONG).show();
+            return;
         }
         // check that there is a set vendor email address.
         boolean noVendor = mVendorEditText.getText().toString().equals("");
         if (noVendor) {
             Toast.makeText(this, R.string.insert_vendor_invalid, Toast.LENGTH_LONG).show();
+            return;
+        }
+        // check that there is an image
+        if (mItemImageView.getDrawable() == null) {
+            Toast.makeText(this, R.string.insert_image_invalid, Toast.LENGTH_LONG).show();
             return;
         }
         //save the entered data
@@ -130,6 +234,11 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         String priceString = mPriceEditText.getText().toString().trim();
         String quantityString = mQuantityEditText.getText().toString().trim();
         String vendorString = mVendorEditText.getText().toString().trim();
+        Bitmap itemImage = ((BitmapDrawable) mItemImageView.getDrawable()).getBitmap();
+
+        // Convert the bitmap to a byte array
+        byte[] image = getBytes(itemImage);
+
         double price = Double.parseDouble(priceString);
         int quantity = Integer.parseInt(quantityString);
 
@@ -139,6 +248,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         values.put(MerchandiseEntry.COLUMN_MERCHANDISE_PRICE, price);
         values.put(MerchandiseEntry.COLUMN_MERCHANDISE_QUANTITY, quantity);
         values.put(MerchandiseEntry.COLUMN_MERCHANDISE_VENDOR, vendorString);
+        values.put(MerchandiseEntry.COLUMN_MERCHANDISE_IMAGE, image);
 
         if (mItemUri == null) {
             // Insert a new item into the provider, if we're in insert mode,
@@ -192,7 +302,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 }
             }
         });
-        // Creat and show the AlertDialog
+        // Create and show the AlertDialog
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
     }
@@ -288,7 +398,8 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 MerchandiseEntry.COLUMN_MERCHANDISE_NAME,
                 MerchandiseEntry.COLUMN_MERCHANDISE_PRICE,
                 MerchandiseEntry.COLUMN_MERCHANDISE_QUANTITY,
-                MerchandiseEntry.COLUMN_MERCHANDISE_VENDOR
+                MerchandiseEntry.COLUMN_MERCHANDISE_VENDOR,
+                MerchandiseEntry.COLUMN_MERCHANDISE_IMAGE
         };
         return new CursorLoader(
                 this,
@@ -305,6 +416,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
      */
     String vendorContact = null;
     String itemName = null;
+
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         if (cursor.moveToFirst()) {
@@ -328,18 +440,24 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             int vendorColumnIndex = cursor.getColumnIndex(MerchandiseEntry.COLUMN_MERCHANDISE_VENDOR);
             vendorContact = cursor.getString(vendorColumnIndex);
             mVendorEditText.setText(vendorContact);
+
+            // Get item image and set it to the imageview
+            int imageColumnIndex = cursor.getColumnIndex(MerchandiseEntry.COLUMN_MERCHANDISE_IMAGE);
+            byte[] imageByte = cursor.getBlob(imageColumnIndex);
+            mItemImageView.setImageBitmap(getImage(imageByte));
         }
     }
 
     String contact = null;
     String item = null;
+
     public void contactVendor() {
         // get the contact information for the EditText or ask the use to
         // enter that info if it's not already present.
         if (vendorContact != null) {
             contact = vendorContact;
         } else {
-            Toast.makeText(this,R.string.vendor_intent_failed,Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.vendor_intent_failed, Toast.LENGTH_LONG).show();
             return;
         }
         // get the product name from the EditText, or ask the user to
@@ -347,14 +465,13 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         if (itemName != null) {
             item = itemName;
         } else {
-            Toast.makeText(this, R.string.item_intent_failed,Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.item_intent_failed, Toast.LENGTH_LONG).show();
         }
-        String[] contacts ={contact};
+        String[] contacts = {contact};
         Intent intent = new Intent(Intent.ACTION_SENDTO);
         intent.setData(Uri.parse("mailto:"));
         intent.putExtra(Intent.EXTRA_EMAIL, contacts);
         intent.putExtra(Intent.EXTRA_SUBJECT, item);
-        Log.e("this", ":item:"+ item +":itemName:"+itemName+":contact:" + contact+":vendorContact:"+vendorContact);
         if (intent.resolveActivity(getPackageManager()) != null) {
             startActivity(intent);
         }
@@ -366,6 +483,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         mNameEditText.setText("");
         mPriceEditText.setText("");
         mQuantityEditText.setText("");
+        mVendorEditText.setText("");
     }
 
     /**
@@ -424,5 +542,33 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         // Create and show the Alert Dialog
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
+    }
+
+    /**
+     * Source for idea: http://viralpatel.net/blogs/pick-image-from-galary-android-app/
+     *
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == GET_FROM_GALLERY && resultCode == RESULT_OK && null != data) {
+            Uri selectedImage = data.getData();
+            String[] filePathColumn = {MediaStore.Images.Media.DATA};
+
+            Cursor cursor = getContentResolver().query(selectedImage,
+                    filePathColumn, null, null, null);
+            cursor.moveToFirst();
+
+            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+            String picturePath = cursor.getString(columnIndex);
+            cursor.close();
+
+            // String picturePath contains the path of selected Image
+            mItemImageView.setImageBitmap(BitmapFactory.decodeFile(picturePath));
+        }
     }
 }
